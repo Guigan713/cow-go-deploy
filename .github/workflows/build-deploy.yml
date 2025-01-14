@@ -40,9 +40,9 @@ jobs:
             username: ${{ vars.DOCKERHUB_USERNAME }}
             password: ${{ secrets.DOCKERHUB_TOKEN }} 
 
-        - name: Set up Docker Buildx # Cette step nous sert à Set Docker Buildx pour charger nos images pour les différent processeurs plus tard dans le job
-          run: |
-            docker buildx create --use
+        # - name: Set up Docker Buildx # Cette step nous sert à Set Docker Buildx pour charger nos images pour les différent processeurs plus tard dans le job
+        #   run: |
+        #     docker buildx create --use
 
         - name: Docker meta
           id: meta
