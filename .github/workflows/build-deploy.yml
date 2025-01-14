@@ -52,6 +52,7 @@ jobs:
                 ${{ env.REGISTRY }}/${{ vars.DOCKERHUB_USERNAME }}/goCow
 
         - name: Build and push
+          if: ${{ matrix.go-os == 'linux'}}
           uses: docker/build-push-action@v6
           with:
             context: .
