@@ -18,7 +18,7 @@ WORKDIR /app
 COPY ./bin/gocow /app/gocow
 
 # Définir la commande par défaut pour l'image Docker
-CMD ["/app/gocow"]
+CMD ["/Projet/main.go"]
 
 
 
