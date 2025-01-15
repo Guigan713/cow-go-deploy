@@ -34,28 +34,28 @@ jobs:
 
       - name: récuperer le numero de verion
         id: version
-        run: |
-          VERSION_TAG="v${{ github.event.inputs.version }}"
-          echo "VERSION_TAG=$VERSION_TAG" >> ${{ vars.VERSION_TAG }}
         # run: |
-        #   # Si l'entrée version est laissée à "auto", on incrémente la version
-        #   if [ "${{ github.event.inputs.version }}" == "auto" ]; then
-        #       # Vérifie si le fichier version.txt existe
-        #       if [ -f version.txt ]; then
-        #       # Lire la version actuelle et incrémenter
-        #           version=$(cat version.txt)
-        #           version_number=$(($version + 1))
-        #       else
-        #           # Si le fichier n'existe pas, on commence à la version 1
-        #           version_number=1
-        #       fi
-        #       # Sauvegarder la nouvelle version dans version.txt
-        #       echo "Nouvelle version: $version_number" > version.txt
-        #       echo "version=$version_number" >> $GITHUB_ENV
-        #   else
-        #       # Si une version spécifique est fournie par l'utilisateur
-        #       echo "version=${{ github.event.inputs.version }}" >> $GITHUB_ENV
-        #   fi
+        #   VERSION_TAG="v${{ github.event.inputs.version }}"
+        #   echo "VERSION_TAG=$VERSION_TAG" >> "v${{ vars.VERSION_TAG }}"
+        run: |
+          # Si l'entrée version est laissée à "auto", on incrémente la version
+          if [ "${{ github.event.inputs.version }}" == "auto" ]; then
+              # Vérifie si le fichier version.txt existe
+              if [ -f version.txt ]; then
+              # Lire la version actuelle et incrémenter
+                  version=$(cat version.txt)
+                  version_number=$(($version + 1))
+              else
+                  # Si le fichier n'existe pas, on commence à la version 1
+                  version_number=1
+              fi
+              # Sauvegarder la nouvelle version dans version.txt
+              echo "Nouvelle version: $version_number" > version.txt
+              echo "version=$version_number" >> $GITHUB_ENV
+          else
+              # Si une version spécifique est fournie par l'utilisateur
+              echo "version=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          fi
 
       - run: |
           go mod init Projet/main.go
@@ -101,7 +101,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: gocow:v${{ vars.VERSION_TAG }}
+          tags: gocow:v${{ env.version }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/${{ matrix.go-arch }}
 
@@ -111,7 +111,7 @@ jobs:
           git config --global user.name "Guigan713"
           git config --global user.email "guillaume.lequin713@gmail.com"
           git add version.txt
-          git commit -m "Incrémentation du numéro de version à ${{ vars.VERSION_TAG }}"
+          git commit -m "Incrémentation du numéro de version à ${{ env.version }}"
           git push origin main
 
   # deploy:
