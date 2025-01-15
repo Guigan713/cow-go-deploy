@@ -63,7 +63,7 @@ jobs:
         id: deployment
         uses: actions/upload-artifact@v4 # or specific "vX.X.X" version tag for this action
         with:
-          path: bin/
+          path: .
           name: cowsaybin-${{ matrix.go-arch }}
   
   push-docker:
