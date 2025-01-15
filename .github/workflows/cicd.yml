@@ -101,18 +101,18 @@ jobs:
         with:
           context: .
           push: true
-          tags: gocow:${{ env.version }}
+          tags: ${{ vars.VERSION_TAG }}
           # labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/${{ matrix.go-arch }}
 
-      - name: Commit and push version update
-        if: ${{ github.event.inputs.version == 'auto' }}
-        run: |
-          git config --global user.name "Guigan713"
-          git config --global user.email "guillaume.lequin713@gmail.com"
-          git add version.txt
-          git commit -m "Incrémentation du numéro de version à ${{ env.version }}"
-          git push origin main
+      # - name: Commit and push version update
+      #   if: ${{ github.event.inputs.version == 'auto' }}
+      #   run: |
+      #     git config --global user.name "Guigan713"
+      #     git config --global user.email "guillaume.lequin713@gmail.com"
+      #     git add version.txt
+      #     git commit -m "Incrémentation du numéro de version à ${{ env.version }}"
+      #     git push origin main
 
   # deploy:
   #   needs: build
