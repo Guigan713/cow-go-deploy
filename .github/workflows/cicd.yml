@@ -1,0 +1,27 @@
+---
+name: build and deliver cowsay app
+
+on:
+    workflow_dispatch:
+    push:
+
+jobs:
+    build:
+        name: build go code into binary
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Get Code from repo
+              uses: actions/checkout@v4
+
+            - name: Setup Go
+              uses: actions/setup-go@v5
+              with:
+                go-version: '>=1.23'
+
+            - run: |
+                go mod init Projet/main.go
+                go mod tidy
+                go run .
+                go build -o "goCowGo" bin/goCow Projet/main.go
+                
