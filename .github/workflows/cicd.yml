@@ -108,7 +108,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t gocow:${{ env.version }}
+          docker build -t gocow:${{ env.version }} .
 
       - name: Push To Dockerhub
         run: |
