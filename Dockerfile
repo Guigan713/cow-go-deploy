@@ -1,13 +1,24 @@
-FROM golang:1.24rc1-bookworm
+# FROM golang:1.24rc1-bookworm
 
-RUN apt update
+# RUN apt update
 
-COPY main* main
+# COPY main* main
 
-WORKDIR /go
+# WORKDIR /go
 
-ENTRYPOINT ["./main"]
+# ENTRYPOINT ["./main"]
 
+# Utiliser une image Go de base
+FROM golang:1.20-alpine as builder
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier le binaire Go compilé dans l'image
+COPY ./bin/gocow /app/gocow
+
+# Définir la commande par défaut pour l'image Docker
+CMD ["/app/gocow"]
 
 
 

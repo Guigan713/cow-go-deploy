@@ -12,9 +12,6 @@ on:
         branches:
             - main
 
-env:
-    VERSION: ${{ github.event.inputs.version}}
-
 jobs:
     build:
         name: build go code into binary
@@ -55,7 +52,7 @@ jobs:
                 go mod init Projet/main.go
                 go mod tidy
                 go run Projet/main.go
-                go build -o bin/gocow.go Projet/main.go
+                go build -o bin/gocow Projet/main.go
 
             - name: Upload static files as artifact
               id: deployment
@@ -77,9 +74,17 @@ jobs:
 
             - name: Build Docker Image
               run: |
-                docker build -t ${{ vars.DOCKERHUB_USERNAME }}/gocow:${{ env.VERSION }} .
+                docker build -t gocow:${{ env.version}} .
 
             - name: Push Docker Image
               run: |
-                docker push ${{ vars.DOCKERHUB_USERNAME }}/gocow:${{ env.VERSION }}
+                docker push gocow:${{ env.version }}
             
+            - name: Commit and push version update
+              if: ${{ github.event.inputs.version == 'auto' }}
+              run: |
+                git config --global user.name "Guigan713"
+                git config --global user.email "guillaume.lequin713@gmail.com"
+                git add version.txt
+                git commit -m "Increment version to ${{ env.version}}"
+                git push origin main
