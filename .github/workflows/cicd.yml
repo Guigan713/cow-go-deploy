@@ -23,5 +23,4 @@ jobs:
                 go mod init Projet/main.go
                 go mod tidy
                 go run .
-                go build -o "goCowGo" bin/goCow Projet/main.go
-                
+                go build -o "goCowGo" bin/goCow .
