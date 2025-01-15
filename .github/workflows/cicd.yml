@@ -3,11 +3,11 @@ name: build and deliver cowsay app
 
 on:
   workflow_dispatch:
-      inputs:
-          version:
-              description: "Version de l'image docker"
-              required: false
-              default: 'auto'
+      # inputs:
+      #     version:
+      #         description: "Version de l'image docker"
+      #         required: false
+      #         default: 'auto'
   push:
       branches:
           - main
@@ -17,87 +17,117 @@ env:
 
 jobs:
   build:
-      name: build go code into binary
-      runs-on: ubuntu-latest
+    name: build go code into binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+          go-arch: [ 'amd64', 'arm64' ]
 
-      steps:
-          - name: Get Code from repo
-            uses: actions/checkout@v4
+    steps:
+      - name: Get Code from repo
+        uses: actions/checkout@v4
 
-          - name: Setup Go
-            uses: actions/setup-go@v5
-            with:
-              go-version: '>=1.23'
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '>=1.23'
 
-          - name: récuperer le numero de verion
-            id: version
-            run: |
-              # Si l'entrée version est laissée à "auto", on incrémente la version
-              if [ "${{ github.event.inputs.version }}" == "auto" ]; then
-                  # Vérifie si le fichier version.txt existe
-                  if [ -f version.txt ]; then
-                  # Lire la version actuelle et incrémenter
-                      version=$(cat version.txt)
-                      version_number=$(($version + 1))
-                  else
-                      # Si le fichier n'existe pas, on commence à la version 1
-                      version_number=1
-                  fi
-                  # Sauvegarder la nouvelle version dans version.txt
-                  echo "Nouvelle version: $version_number" > version.txt
-                  echo "version=$version_number" >> $GITHUB_ENV
-              else
-                  # Si une version spécifique est fournie par l'utilisateur
-                  echo "version=${{ github.event.inputs.version }}" >> $GITHUB_ENV
-              fi
+      # - name: récuperer le numero de verion
+      #   id: version
+      #   run: |
+      #     # Si l'entrée version est laissée à "auto", on incrémente la version
+      #     if [ "${{ github.event.inputs.version }}" == "auto" ]; then
+      #         # Vérifie si le fichier version.txt existe
+      #         if [ -f version.txt ]; then
+      #         # Lire la version actuelle et incrémenter
+      #             version=$(cat version.txt)
+      #             version_number=$(($version + 1))
+      #         else
+      #             # Si le fichier n'existe pas, on commence à la version 1
+      #             version_number=1
+      #         fi
+      #         # Sauvegarder la nouvelle version dans version.txt
+      #         echo "Nouvelle version: $version_number" > version.txt
+      #         echo "version=$version_number" >> $GITHUB_ENV
+      #     else
+      #         # Si une version spécifique est fournie par l'utilisateur
+      #         echo "version=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+      #     fi
 
-          - run: |
-              go mod init Projet/main.go
-              go mod tidy
-              go run Projet/main.go
-              go build -o bin/gocow Projet/main.go
+      - run: |
+          go mod init Projet/main.go
+          go mod tidy
+          GOARCH=${{ matrix.go-arch }} go build -o bin/gocow Projet/main.go
 
-          - name: Upload static files as artifact
-            id: deployment
-            uses: actions/upload-artifact@v4 # or specific "vX.X.X" version tag for this action
-            with:
-              path: bin/
-              name: cowsaybin
+      - name: Upload static files as artifact
+        id: deployment
+        uses: actions/upload-artifact@v4 # or specific "vX.X.X" version tag for this action
+        with:
+          path: bin/
+          name: cowsaybin-${{ matrix.go-arch }}
   
   push-docker:
-      name: push in docker registry
-      needs: build
-      runs-on: ubuntu-latest
-      steps:
-          - name: Login to Docker Hub
-            uses: docker/login-action@v3
-            with:
-              username: ${{ vars.DOCKERHUB_USERNAME }}
-              password: ${{ secrets.DOCKERHUB_TOKEN }}
+    name: push in docker registry
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+          go-arch: [ 'amd64', 'arm64' ]
+    steps:
 
-          # - name: Build Docker Image
-          #   run: |
-          #     docker build -t gocow:${{ env.version }} .
+      - uses: actions/download-artifact@v4
+        with:
+          path: .
+          name: cowsaybin-${{ matrix.go-arch }}
 
-          # - name: Push Docker Image
-          #   run: |
-          #     docker push gocow:${{ env.version }}
+      # - uses: actions/checkout@v4
+      #   with:
+      #     sparse-checkout: |
+      #       Dockerfile
+      #     sparse-checkout-cone-mode: false
 
-          - name: Set up Docker Buildx
-            uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-          - name: Build and push
-            uses: docker/build-push-action@v6
-            with:
-              context: .
-              push: true
-              tags: ${{ env.version }}
-          
-          - name: Commit and push version update
-            if: ${{ github.event.inputs.version == 'auto' }}
-            run: |
-              git config --global user.name "Guigan713"
-              git config --global user.email "guillaume.lequin713@gmail.com"
-              git add version.txt
-              git commit -m "Increment version to ${{ env.version}}"
-              git push origin main
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v3
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ vars.DOCKERHUB_USERNAME }}/gocow
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/${{ matrix.go-arch }}
+      
+      # - name: Commit and push version update
+      #   if: ${{ github.event.inputs.version == 'auto' }}
+      #   run: |
+      #     git config --global user.name "Guigan713"
+      #     git config --global user.email "guillaume.lequin713@gmail.com"
+      #     git add version.txt
+      #     git commit -m "Increment version to ${{ env.version}}"
+      #     git push origin main
+
+  # deploy:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         path: .
+  #         name: cowsaybin
+  #     - run: ./Projet/main
+
+

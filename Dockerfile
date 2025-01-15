@@ -15,10 +15,8 @@ FROM golang:1.24rc1-bookworm as builder
 WORKDIR /app
 
 # Copier le binaire Go compilé dans l'image
-COPY ./bin/gocow /app/gocow
+COPY main* main
 
 ENTRYPOINT ["./main"]
-
-CMD ["/app/gocow"]
 
 
