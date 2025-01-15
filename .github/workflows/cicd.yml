@@ -25,7 +25,7 @@ jobs:
                 go mod init Projet/main.go
                 go mod tidy
                 go run Projet/main.go
-                go build -o "goCowGo.go" bin/goCow Projet/main.go
+                go build -o "goCowGo" bin/goCow.go Projet/main.go
 
             - name: Upload static files as artifact
               id: deployment
