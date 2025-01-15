@@ -89,20 +89,20 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ env.REGISTRY }}/${{ vars.DOCKERHUB_USERNAME }}/gocow
+      # - name: Docker meta
+      #   id: meta
+      #   uses: docker/metadata-action@v5
+      #   with:
+      #     images: |
+      #       ${{ env.REGISTRY }}/${{ vars.DOCKERHUB_USERNAME }}/gocow
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.version }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: gocow:${{ env.version }}
+          # labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/${{ matrix.go-arch }}
 
       - name: Commit and push version update
