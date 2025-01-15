@@ -55,7 +55,7 @@ jobs:
                 go mod init Projet/main.go
                 go mod tidy
                 go run Projet/main.go
-                go build -o bin/goCow.go Projet/main.go
+                go build -o bin/gocow.go Projet/main.go
 
             - name: Upload static files as artifact
               id: deployment
@@ -77,7 +77,7 @@ jobs:
 
             - name: Build Docker Image
               run: |
-                docker build -t gocow:${{ env.VERSION }} .
+                docker build -t ${{ vars.DOCKERHUB_USERNAME }}/gocow:${{ env.VERSION }} .
 
             - name: Push Docker Image
               run: |
