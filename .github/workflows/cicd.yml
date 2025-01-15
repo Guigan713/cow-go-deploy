@@ -34,29 +34,29 @@ jobs:
 
       - name: récuperer le numero de verion
         id: version
-        run: |
-          VERSION_TAG="v${{ github.event.inputs.version }}"
-          echo "VERSION_TAG=$VERSION_TAG" >> "v${{ vars.VERSION_TAG }}"
+        # run: |
+        #   VERSION_TAG="v${{ github.event.inputs.version }}"
+        #   echo "VERSION_TAG=$VERSION_TAG" >> "v${{ vars.VERSION_TAG }}"
     
-      #   run: |
-      #     Si l'entrée version est laissée à "auto", on incrémente la version
-      #     if [ "${{ github.event.inputs.version }}" == "auto" ]; then
-      #         Vérifie si le fichier version.txt existe
-      #         if [ -f version.txt ]; then
-      #         Lire la version actuelle et incrémenter
-      #             version=$(cat version.txt)
-      #             version_number=$(($version + 1))
-      #         else
-      #             Si le fichier n'existe pas, on commence à la version 1
-      #             version_number=1
-      #         fi
-      #         Sauvegarder la nouvelle version dans version.txt
-      #         echo "Nouvelle version: $version_number" > version.txt
-      #         echo "version=$version_number" >> $GITHUB_ENV
-      #     else
-      #         Si une version spécifique est fournie par l'utilisateur
-      #         echo "version=${{ github.event.inputs.version }}" >> $GITHUB_ENV
-      #     fi
+        run: |
+          Si l'entrée version est laissée à "auto", on incrémente la version
+          if [ "${{ github.event.inputs.version }}" == "auto" ]; then
+              Vérifie si le fichier version.txt existe
+              if [ -f version.txt ]; then
+              Lire la version actuelle et incrémenter
+                  version=$(cat version.txt)
+                  version_number=$(($version + 1))
+              else
+                  Si le fichier n'existe pas, on commence à la version 1
+                  version_number=1
+              fi
+              Sauvegarder la nouvelle version dans version.txt
+              echo "Nouvelle version: $version_number" > version.txt
+              echo "version=$version_number" >> $GITHUB_ENV
+          else
+              Si une version spécifique est fournie par l'utilisateur
+              echo "version=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          fi
 
       - run: |
           go mod init Projet/main.go
@@ -90,30 +90,38 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ env.REGISTRY }}/${{ vars.DOCKERHUB_USERNAME }}/gocow
+      # - name: Docker meta
+      #   id: meta
+      #   uses: docker/metadata-action@v5
+      #   with:
+      #     images: |
+      #       ${{ env.REGISTRY }}/${{ vars.DOCKERHUB_USERNAME }}/gocow
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}_${{ vars.VERSION_TAG }}
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/${{ matrix.go-arch }}
+      # - name: Build and push
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     context: .
+      #     push: true
+      #     tags: ${{ steps.meta.outputs.tags }}_${{ vars.VERSION_TAG }}
+      #     labels: ${{ steps.meta.outputs.labels }}
+      #     platforms: linux/${{ matrix.go-arch }}
 
-      # - name: Commit and push version update
-      #   if: ${{ github.event.inputs.version == 'auto' }}
-      #   run: |
-      #     git config --global user.name "Guigan713"
-      #     git config --global user.email "guillaume.lequin713@gmail.com"
-      #     git add version.txt
-      #     git commit -m "Incrémentation du numéro de version à ${{ env.version }}"
-      #     git push origin main
+      - name: Build Docker Image
+        run: |
+          docker build -t gocow:${{ env.version }}
+
+      - name: Push To Dockerhub
+        run: |
+          docker push gocow:${{ env.version }}
+
+      - name: Commit and push version update
+        if: ${{ github.event.inputs.version == 'auto' }}
+        run: |
+          git config --global user.name "Guigan713"
+          git config --global user.email "guillaume.lequin713@gmail.com"
+          git add version.txt
+          git commit -m "Incrémentation du numéro de version à ${{ env.version }}"
+          git push origin main
 
   # deploy:
   #   needs: build
