@@ -17,8 +17,8 @@ jobs:
       - uses: Guigan713/debug-composite-action@v1
       - run: |
           whoami
-          apt update
-          apt -y install cowsay
+          sudo apt update
+          sudo apt -y install cowsay
           # le -y permet de répondre à la question yes/no de l'install
           # les actions ne gèrent pas cette fonctionnalité
           cowsay $MESSAGE
