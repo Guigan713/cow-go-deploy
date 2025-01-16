@@ -14,6 +14,7 @@ jobs:
     name: a cow that says something
     runs-on: ubuntu-latest
     steps:
+      - uses: Guigan713/debug-composite-action@v1
       - run: |
           whoami
           apt update
