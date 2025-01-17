@@ -3,11 +3,11 @@ name: Build & Deploy on GitHub Actions
 
 on:
     workflow_dispatch:
-    schedule:
-      - cron: "0 1 * * *"
+    # schedule:
+    #   - cron: "0 1 * * *"
     push:
         branches:
-            - dev
+            - main
 
 env:
   REGISTRY: docker.io
